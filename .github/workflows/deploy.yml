@@ -1,44 +1,22 @@
 name: Deploy to GitHub Pages
-
 on:
   push:
-    branches: [ main ]
-    # Review gh actions docs if you want to further define triggers, paths, etc
-    # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#on
-  pull_request:
-    branches: [ main ]
-
+    branches: [main]
 jobs:
-  test-deploy:
-    if: github.event_name != 'push'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 18
-          cache: npm
-      - name: Install dependencies
-        run: npm ci
-      - name: Test build website
-        run: npm run build
   deploy:
-    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
           node-version: 18
-          cache: npm
-      - uses: webfactory/ssh-agent@v0.5.0
-        with:
-          ssh-private-key: ${{ secrets.GH_PAGES_DEPLOY_TU_CAM }}
+          cache: yarn
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      - name: Build website
+        run: yarn build
       - name: Deploy to GitHub Pages
-        env:
-          USE_SSH: true
-        run: |
-          git config --global user.email "rkris17@gmail.com"
-          git config --global user.name "rkris17"
-          npm ci 
-          npm run deploy
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build
